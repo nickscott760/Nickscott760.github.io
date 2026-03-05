@@ -1,0 +1,214 @@
+# Nickscott760.github.io
+Reports yo
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field Report App</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #000;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #ff0000;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #ccc;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #ff0000;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      height: 150px;
+      resize: vertical;
+    }
+    .output {
+      background: #111;
+      padding: 10px;
+      border: 1px solid #ff0000;
+      border-radius: 4px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+    button {
+      background: #ff0000;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #cc0000;
+    }
+    .calc {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .calc div {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <h1>Field Marketing Report</h1>
+
+  <div class="section">
+    <div class="calc">
+      <div>
+        <label for="clockIn">Clock In (HH:MM)</label>
+        <input type="text" id="clockIn" placeholder="e.g., 09:00">
+      </div>
+      <div>
+        <label for="clockOut">Clock Out (HH:MM)</label>
+        <input type="text" id="clockOut" placeholder="e.g., 17:00">
+      </div>
+    </div>
+    <div id="hoursOutput" class="output">Total Hours: 0</div>
+  </div>
+
+  <div class="section">
+    <div class="calc">
+      <div>
+        <label for="startMileage">Starting Mileage</label>
+        <input type="number" id="startMileage" placeholder="e.g., 10000">
+      </div>
+      <div>
+        <label for="endMileage">Ending Mileage</label>
+        <input type="number" id="endMileage" placeholder="e.g., 10150">
+      </div>
+    </div>
+    <div id="milesOutput" class="output">Total Miles: 0</div>
+  </div>
+
+  <div class="section">
+    <label for="notes">Report Notes</label>
+    <textarea id="notes" placeholder="Enter your report details here..."></textarea>
+  </div>
+
+  <button onclick="calculate()">Calculate & Generate Report</button>
+  <div id="reportOutput" class="output" style="display: none;"></div>
+
+  <button onclick="cleanUp()" style="display: none;" id="cleanButton">Clean Up with AI (Basic)</button>
+  <div id="cleanedReport" class="output" style="display: none;"></div>
+
+  <script>
+    function parseTime(timeStr) {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    }
+
+    function calculateHours(inTime, outTime) {
+      const inMins = parseTime(inTime);
+      const outMins = parseTime(outTime);
+      const diffMins = outMins - inMins;
+      return (diffMins / 60).toFixed(2);
+    }
+
+    function cleanText(text) {
+      // Basic "AI" cleanup: Trim, capitalize sentences, add periods if missing, structure into paragraphs.
+      text = text.trim().replace(/\n+/g, '\n\n'); // Normalize newlines to paragraphs
+      const sentences = text.split(/([.!?]\s*)/).filter(Boolean);
+      let cleaned = '';
+      for (let i = 0; i < sentences.length; i += 2) {
+        let sentence = (sentences[i] || '').trim();
+        if (sentence) {
+          sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1);
+          if (!/[.!?]/.test(sentence.slice(-1))) sentence += '.';
+        }
+        cleaned += sentence + (sentences[i+1] || ' ');
+      }
+      return cleaned.trim().replace(/\n/g, '<br>');
+    }
+
+    function calculate() {
+      const clockIn = document.getElementById('clockIn').value;
+      const clockOut = document.getElementById('clockOut').value;
+      const startMile = parseFloat(document.getElementById('startMileage').value) || 0;
+      const endMile = parseFloat(document.getElementById('endMileage').value) || 0;
+      const notes = document.getElementById('notes').value;
+
+      let hours = 0;
+      if (clockIn && clockOut) {
+        try {
+          hours = calculateHours(clockIn, clockOut);
+        } catch (e) {
+          hours = 'Invalid times';
+        }
+      }
+      const miles = endMile - startMile;
+
+      document.getElementById('hoursOutput').innerText = `Total Hours: ${hours}`;
+      document.getElementById('milesOutput').innerText = `Total Miles: ${miles.toFixed(0)}`;
+
+      const report = `
+Report Summary:
+- Clocked In: ${clockIn || 'N/A'}
+- Clocked Out: ${clockOut || 'N/A'}
+- Total Hours: ${hours}
+- Starting Mileage: ${startMile}
+- Ending Mileage: ${endMile}
+- Total Miles: ${miles.toFixed(0)}
+
+Notes:
+${notes || 'No notes provided.'}
+      `;
+
+      document.getElementById('reportOutput').innerText = report;
+      document.getElementById('reportOutput').style.display = 'block';
+      document.getElementById('cleanButton').style.display = 'block';
+    }
+
+    function cleanUp() {
+      const notes = document.getElementById('notes').value;
+      const cleanedNotes = cleanText(notes);
+
+      const clockIn = document.getElementById('clockIn').value;
+      const clockOut = document.getElementById('clockOut').value;
+      const hours = document.getElementById('hoursOutput').innerText.split(': ')[1];
+      const startMile = document.getElementById('startMileage').value;
+      const endMile = document.getElementById('endMileage').value;
+      const miles = document.getElementById('milesOutput').innerText.split(': ')[1];
+
+      const cleanedReport = `
+Structured Report:
+- Clocked In: ${clockIn || 'N/A'}
+- Clocked Out: ${clockOut || 'N/A'}
+- Total Hours Worked: ${hours}
+- Starting Mileage: ${startMile}
+- Ending Mileage: ${endMile}
+- Total Miles Driven: ${miles}
+
+Cleaned Notes:
+${cleanedNotes || 'No notes provided.'}
+      `;
+
+      document.getElementById('cleanedReport').innerText = cleanedReport;
+      document.getElementById('cleanedReport').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
